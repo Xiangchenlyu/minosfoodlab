@@ -465,6 +465,48 @@
                 ],
                 category: 'chicken'
             },
+            {
+                id: 23,
+                name: '炒鸡',
+                price: 48.00,
+                description: '鲜嫩多汁的炒鸡，配以特制香料，口感丰富。',
+                category: 'chicken',
+                tags: ['招牌菜', '辣'],
+                image: 'https://p26-doubao-search-sign.byteimg.com/labis/34adb324a226eda23b19b512941ac1b2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789494838&x-signature=4VD8EqmIrzQudtpKCUFsX6N1EnE%3D',
+                calories: 650,
+                ingredients: ['鸡肉', '青椒', '红椒', '洋葱', '大蒜', '生姜', '酱油', '料酒', '白糖', '干辣椒'],
+                isSpicy: true,
+                isRecommended: true,
+                detailImages: [
+                    'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1330934198161375262~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789494838&x-signature=PTzSTNZvv%2B%2Bg9eXVSDCIIiQN50U%3D',
+                    'https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1574958434382905348~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789494838&x-signature=k6frGoFfV5udUioCnUmNhEsge64%3D',
+                    'https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1561604985964199939~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789494838&x-signature=8R2LMVBTx6OO%2BtsuqC2%2BU0BoN1s%3D'
+                ]
+            },
+            {
+                id: 21,
+                name: '酸汤鸡肉',
+                price: 39.00,
+                description: '酸爽开胃的酸汤，搭配嫩滑鸡肉',
+                calories: 340,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/930c726ccebc4ab5a6f5e14893bf3939~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524018&x-signature=KGWklFWH5n6lou57ji%2FAg3jUqW4%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/68c844fbcb4f473e817287d28f0e7dc4.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=t2K1ntfgbGWY3%2F9I7Dcz%2BuNYK18%3D'
+                ],
+                category: 'chicken'
+            },
+            {
+                id: 22,
+                name: '照烧鸡排',
+                price: 32.00,
+                description: '日式照烧风味，甜咸适中，肉质鲜嫩',
+                calories: 360,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d4ee975f1be44049a7d35dbedb03ef0c~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524048&x-signature=ikxmJXaVAb4tQJiwWHyS8yAwoZ4%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/8cb574b47b3e436b9b72685b00b755e7.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=5hrf9T8K3B5h1LKED83PXeBfuhI%3D'
+                ],
+                category: 'chicken'
+            },
             // 羊肉类菜品
             {
                 id: 23,
@@ -1365,36 +1407,7 @@
             return categoryMap[category] || category;
         }
 
-        // 添加到购物车
-        function addToCart(id) {
-            const item = menuItems.find(item => item.id === id);
-            if (!item) return;
 
-            const cartItem = cart.find(cartItem => cartItem.id === id);
-            if (cartItem) {
-                cartItem.quantity += 1;
-            } else {
-                cart.push({
-                    ...item,
-                    quantity: 1
-                });
-            }
-
-            updateCart();
-        }
-
-        // 更新购物车
-        function updateCart() {
-            // 更新购物车数量
-            cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
-
-            // 更新购物车侧边栏
-            renderCartItems();
-            
-            // 更新总价
-            const total = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-            totalPrice.textContent = `¥${total.toFixed(2)}`;
-        }
 
         // 渲染购物车项目
         function renderCartItems() {
