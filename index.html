@@ -1,0 +1,1599 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FF6B35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>移动端点单菜单</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF6B35',
+                        secondary: '#F7931E',
+                        background: '#FFF8F3',
+                        textDark: '#333333',
+                        textLight: '#666666'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .category-active {
+                @apply bg-primary text-white border-l-4 border-yellow-400;
+            }
+            .menu-item {
+                @apply bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg mb-4;
+                min-height: 240px;
+            }
+            .menu-item-image {
+                @apply w-full h-40 object-cover;
+                min-height: 160px;
+            }
+            .cart-bounce {
+                animation: bounce 0.5s ease-in-out;
+            }
+            @keyframes bounce {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+        }
+    </style>
+</head>
+<body class="bg-background font-sans">
+    <!-- 顶部图片区域 -->
+    <div id="headerImage" class="header-image w-full h-48 bg-cover bg-center z-40" style="background-image: url('https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/dde4b1fae69e4b7cb83bdf2c4c81816d.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&amp;rcl=2026031800115911DA342D29B862475691&amp;rrcfp=8a172a1a&amp;x-expires=1774368719&amp;x-signature=wC2PeQqV05KNALlYSa0LZaeETs4%3D');">
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-4">
+            <h1 class="text-white text-2xl font-bold">MINO'S FOOD LAB</h1>
+        </div>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <main class="flex h-screen pt-0">
+        <!-- 左侧类别导航 -->
+        <div class="w-1/5 bg-white shadow-md overflow-y-auto scrollbar-hide" style="min-width: 70px;">
+            <ul class="py-2">
+                <li class="category-item category-active py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="all">
+                    🍽️全部
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="beef">
+                    🐄牛肉
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="pork">
+                    🐖猪肉
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="chicken">
+                    🍗鸡肉
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="lamb">
+                    🐑羊肉
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="duck">
+                    🦆鸭肉
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="seafood">
+                    🐟海鲜
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="vegetable">
+                    🥬蔬菜
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="hotpot">
+                    🍲火锅
+                </li>
+                <li class="category-item py-4 px-2 text-center cursor-pointer transition-all duration-300" data-category="rice_noodle">
+                    🍜饭面汤粉
+                </li>
+            </ul>
+        </div>
+
+        <!-- 右侧菜品列表 -->
+        <div class="w-4/5 overflow-y-auto" id="menuItemsContainer">
+            <div id="categoryTitle" class="bg-white p-4 text-lg font-bold border-b">
+                全部菜品
+            </div>
+            <div id="menuItems" class="p-4 grid grid-cols-1 gap-4">
+                <!-- 菜品将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </main>
+
+    <!-- 购物车按钮 - 可拖动 -->
+    <div id="cartButtonContainer" class="fixed bottom-6 right-6 z-50 draggable">
+        <button id="cartButton" class="bg-secondary text-white p-3 rounded-full shadow-lg relative">
+            <i class="fa fa-shopping-cart"></i>
+            <span id="cartCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+        </button>
+    </div>
+
+    <!-- 购物车侧边栏 -->
+    <div id="cartSidebar" class="fixed top-0 right-0 h-full w-3/4 bg-white shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+        <div class="p-4 h-full flex flex-col">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h2 class="text-xl font-bold">购物车</h2>
+                <button id="closeCart" class="text-gray-500">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div id="cartItems" class="flex-grow overflow-y-auto py-4">
+                <!-- 购物车项目将通过JavaScript动态生成 -->
+                <div class="text-center text-gray-500 py-8" id="emptyCart">
+                    <i class="fa fa-shopping-cart text-4xl mb-2"></i>
+                    <p>购物车还是空的</p>
+                </div>
+            </div>
+            <div class="border-t pt-4">
+                <div class="flex justify-between mb-4">
+                    <span class="font-bold">总计:</span>
+                    <span id="totalPrice" class="font-bold text-primary">¥0.00</span>
+                </div>
+                <button id="checkoutButton" class="w-full bg-primary text-white py-3 rounded-lg font-bold hover:bg-opacity-90 transition-all">
+                    去结算
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+    <!-- 菜品详情模态框 -->
+    <div id="itemDetailModal" class="fixed inset-0 bg-white z-50 transform translate-x-full transition-transform duration-300">
+        <div class="h-full flex flex-col">
+            <!-- 模态框头部 -->
+            <div class="p-4 flex justify-between items-center border-b">
+                <button id="closeDetailModal" class="text-gray-500 text-xl">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <h2 id="detailItemName" class="text-xl font-bold"></h2>
+                <div class="w-8"></div> <!-- 占位，保持标题居中 -->
+            </div>
+            
+            <!-- 图片轮播区域 -->
+            <div class="relative flex-grow overflow-hidden">
+                <div id="imageSlider" class="flex h-full transition-transform duration-300">
+                    <!-- 图片将通过JavaScript动态添加 -->
+                </div>
+                <!-- 轮播指示器 -->
+                <div id="sliderIndicators" class="absolute bottom-4 left-0 right-0 flex justify-center space-x-2">
+                    <!-- 指示器将通过JavaScript动态添加 -->
+                </div>
+            </div>
+            
+            <!-- 菜品信息区域 -->
+            <div class="p-4 border-t">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="detailItemPrice" class="text-2xl font-bold text-primary"></span>
+                    <button id="detailAddToCart" class="bg-secondary text-white px-6 py-2 rounded-full hover:bg-opacity-90 transition-all">
+                        加入购物车
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <h3 class="font-bold mb-2">菜品描述</h3>
+                    <p id="detailItemDescription" class="text-gray-600"></p>
+                </div>
+                <div class="flex justify-between text-sm text-gray-500">
+                    <span id="detailItemCalories"></span>
+                    <span id="detailItemCategory"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 菜品数据
+        const menuItems = [
+            // 猪肉类菜品
+            {
+                id: 1,
+                name: '白菜炖粉条',
+                price: 28.00,
+                description: '白菜与粉条的完美搭配，家常美味',
+                calories: 320,
+                image: 'https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1474877020615213076~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319680&x-signature=qAGm30AV1Fd%2Bu5JPz48gAlTEWHs%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/bef2e7ac29154b81a7054ba95facf2d9.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603180140304A3CDCF55A3B909561C0&rrcfp=8a172a1a&x-expires=1774374030&x-signature=KhsBJ%2Fnz6s%2BlSU6LHaJZ%2F6tPZBk%3D'
+                ],
+                category: 'pork'
+            },
+            {
+                id: 2,
+                name: '锅包肉',
+                price: 38.00,
+                description: '东北名菜，外酥里嫩，酸甜可口',
+                calories: 380,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1510866252357435392~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319680&x-signature=kTdpO2HnIB4ufb1BQMqRqZKTe8Y%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/d326c3abeb244bafa41cc37a73aadd1e.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260318014216CD66189774728D4A8CDE&rrcfp=8a172a1a&x-expires=1774374136&x-signature=%2BMh40h5dl7suiFnn5WM8Fv2j6yU%3D'
+                ],
+                category: 'pork'
+            },
+            {
+                id: 3,
+                name: '红烧排骨',
+                price: 45.00,
+                description: '经典红烧，肉质酥烂，香气四溢',
+                calories: 420,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-6w9my0ksvp/c7bcdc9c36d145f5afb4cce9a33596e3~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319680&x-signature=77xSuG85UD33AlsvF0XRt7vdjDA%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/7a0a0d17c5b841d78919fc3a9afa4e92.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031801445032ECF84C586AA699AA1D&rrcfp=8a172a1a&x-expires=1774374290&x-signature=BxE3c16IPcmuOPh0dohQacddRc4%3D'
+                ],
+                category: 'pork'
+            },
+            {
+                id: 4,
+                name: '烤排骨',
+                price: 58.00,
+                description: '外焦里嫩，香味扑鼻，口感一流',
+                calories: 450,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1860298821633048587~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319680&x-signature=otiD0eSLTb7FV2C5wcMhEX9%2FIL8%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/a4c25c10ac014e5f8b96aac1802f06ee.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031801445032ECF84C586AA699AA1D&rrcfp=8a172a1a&x-expires=1774374290&x-signature=KwCPWqERb1LJy38QQFnelV%2BMw9s%3D',
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/8beb4ba03dcf43c1969971b26aeb99c1.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031801445032ECF84C586AA699AA1D&rrcfp=8a172a1a&x-expires=1774374290&x-signature=zvCs4uoyBYQazhsSFXuohK%2BBwYg%3D'
+                ],
+                category: 'pork'
+            },
+            {
+                id: 5,
+                name: '辣炒肥肠',
+                price: 36.00,
+                description: '麻辣鲜香，口感爽脆，下酒必备',
+                calories: 390,
+                image: 'https://p26-doubao-search-sign.byteimg.com/labis/505534bf723732c3c43f0364ee74bfee~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319699&x-signature=F0pfq6XfUsXZlLil3gpYkN8oH8Q%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/05acf26857b842bfa02a15036a2d5e5b.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031801445032ECF84C586AA699AA1D&rrcfp=8a172a1a&x-expires=1774374290&x-signature=XHK%2BIi73geDZ5HuYCPq%2F27nLbUs%3D'
+                ],
+                category: 'pork'
+            },
+            {
+                id: 6,
+                name: '排骨炖豆角',
+                price: 42.00,
+                description: '排骨与豆角的经典组合，营养丰富',
+                calories: 380,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1152684894924701715~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319698&x-signature=SwZjY1wuboufOFmUpEuDpde9Amk%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/6d80b7cf635047a2a138c14f9bb956a5.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031801445032ECF84C586AA699AA1D&rrcfp=8a172a1a&x-expires=1774374290&x-signature=HD7e7NVetcERp3pSSr1n2zdy23U%3D'
+                ],
+                category: 'pork'
+            },
+            {
+                id: 7,
+                name: '酸菜白肉',
+                price: 32.00,
+                description: '东北特色，酸菜酸爽，白肉香而不腻',
+                calories: 350,
+                image: 'https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1746002002306400256~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319699&x-signature=zngelt%2BlmdvJDw77dgi6%2FCuMX6Q%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/9d6e63e7bffb46a39a9ad2e52f039f60.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260318013342924BF28C2FAD6851E5CF&rrcfp=8a172a1a&x-expires=1774373622&x-signature=0cHG%2B0N003SEza3fJ9X7b0rcRPY%3D'
+                ],
+                category: 'pork'
+            },
+            {
+                id: 8,
+                name: '小炒肉',
+                price: 35.00,
+                description: '家常小炒，肉质鲜嫩，开胃下饭',
+                calories: 340,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/560462926904950859~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789319699&x-signature=7UcpDac5pEoFG2OCIH3aVCvMtCU%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ccd54623722f43668ebe4e259aed832a.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031801445032ECF84C586AA699AA1D&rrcfp=8a172a1a&x-expires=1774374290&x-signature=2%2BQOf2bB3s3mqSoUgi5VLVMPjkg%3D'
+                ],
+                category: 'pork'
+            },
+            // 牛肉类菜品
+            {
+                id: 9,
+                name: '煎牛排',
+                price: 68.00,
+                description: '精选澳洲牛排，外焦里嫩，口感多汁',
+                calories: 420,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/995344463159099426~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789323364&x-signature=uxKYo1wgn2s%2B3yIXoLK2hxGyi1M%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ae9e4e658ab7498086cf2428c7125b87.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031802190651A2EB528DF61C4B3791&rrcfp=8a172a1a&x-expires=1774376346&x-signature=vNnOh6ge6t9JRwAgzdIyt5cB0gw%3D'
+                ],
+                category: 'beef'
+            },
+            {
+                id: 10,
+                name: '烤牛仔骨',
+                price: 58.00,
+                description: '秘制烤牛仔骨，香气四溢，肉质鲜嫩',
+                calories: 380,
+                image: 'https://p3-doubao-search-sign.byteimg.com/labis/24f12ee8b8ea55d2092ee5de993ed764~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789323364&x-signature=1UgG7Ja7FmRnbcLx%2FvJrtIIwFnk%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/dc077478982f45a894aa5d3dd5baaf04.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031802190651A2EB528DF61C4B3791&rrcfp=8a172a1a&x-expires=1774376346&x-signature=%2FFlxjgDhUoY1%2Fcv%2FqTtkhRnFTz4%3D'
+                ],
+                category: 'beef'
+            },
+            {
+                id: 11,
+                name: '毛豆炒牛肉',
+                price: 32.00,
+                description: '新鲜毛豆搭配嫩滑牛肉，家常美味',
+                calories: 280,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1502623093456240650~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789323364&x-signature=rKlc5e%2BfAZuRtXVp8IYeKK4IkXs%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/01667af0725e49b3a4716b526e171c32.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031802190651A2EB528DF61C4B3791&rrcfp=8a172a1a&x-expires=1774376346&x-signature=XeV%2F1vGdx7v9nzwjk%2BVEplobq2Q%3D'
+                ],
+                category: 'beef'
+            },
+            {
+                id: 12,
+                name: '泡椒牛肉',
+                price: 36.00,
+                description: '酸辣爽口的泡椒搭配嫩滑牛肉，开胃下饭',
+                calories: 310,
+                image: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1330167331733372936~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789323364&x-signature=SYGhtnSGd7xb%2FsNKg%2FtZ8%2F2ZsgM%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/bc595a701a4a4ed5832367f4b652e6e9.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031802190651A2EB528DF61C4B3791&rrcfp=8a172a1a&x-expires=1774376346&x-signature=hytsFRIZmnjzUEUhHacmvSCvq%2BA%3D'
+                ],
+                category: 'beef'
+            },
+            {
+                id: 13,
+                name: '清炖牛肋条',
+                price: 48.00,
+                description: '慢炖牛肋条，汤清肉烂，营养丰富',
+                calories: 340,
+                image: 'https://p11-doubao-search-sign.byteimg.com/tos-cn-i-6w9my0ksvp/2214275ddca44e2f81dfc8262e8ee7c2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789323409&x-signature=o17qh6MfFnZwMSy4gF1%2F6pIKfiA%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/8f3f63d6c0a6421db61e765001d6acfd.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031802190651A2EB528DF61C4B3791&rrcfp=8a172a1a&x-expires=1774376346&x-signature=PTWSil8fcE5QWGmPFCNVGEcQ30A%3D'
+                ],
+                category: 'beef'
+            },
+            {
+                id: 14,
+                name: '水煮牛肉',
+                price: 42.00,
+                description: '四川经典，麻辣鲜香，牛肉滑嫩',
+                calories: 360,
+                image: 'https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1510822941870653445~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789323409&x-signature=DELkPFKzj3yaDJ6zLAfGVbwr1dg%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/a8f849b9cb89435d94eb3f2acfb5bd23.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031802190651A2EB528DF61C4B3791&rrcfp=8a172a1a&x-expires=1774376346&x-signature=EVlAlqjF%2BWiquUH8P32YTPDuitE%3D'
+                ],
+                category: 'beef'
+            },
+            {
+                id: 15,
+                name: '酸汤肥牛',
+                price: 45.00,
+                description: '酸爽开胃的酸汤搭配鲜嫩肥牛，口感丰富',
+                calories: 330,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/7f53ce12024f435a8d90bb8a9d3e5cbf~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319233100F36EB9351B28E3E8510C&rrcfp=f06b921b&x-expires=1776526304&x-signature=41PkAlWjdWQ9J5EAqtNkj8QEoMc%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ba6fa725d46041d88a2399a990bdb1ff.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=2026031802190651A2EB528DF61C4B3791&rrcfp=8a172a1a&x-expires=1774376346&x-signature=bYtLYPyt%2B1eQjaxWhvTHei3aIOQ%3D'
+                ],
+                category: 'beef'
+            },
+            // 鸡肉类菜品
+            {
+                id: 16,
+                name: '白切鸡',
+                price: 38.00,
+                description: '传统白切鸡，皮滑肉嫩，蘸料鲜香',
+                calories: 320,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/ec8f34c49a484b96b736ecc8d81486bb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524024&x-signature=yM3DD4cZXwaCoe%2BCS4YyxezxrF4%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/355906459e414760a8d1b4fbf46331f3.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=XC%2FhHI2ehwkQb6nDSazu1cwgKS0%3D'
+                ],
+                category: 'chicken'
+            },
+            {
+                id: 17,
+                name: '葱烧鸡排',
+                price: 28.00,
+                description: '香煎鸡排配以葱油，香气扑鼻',
+                calories: 350,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/ce508f7d12d14da796d83ecdc90db5d2~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524018&x-signature=gIMT802dLYwxxpUl0hrei9huQvA%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/223f6528fbcc4ccb8b572135d2edeed1.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=Kra3tON6BFOVsaPfVSbA72c4p%2BY%3D'
+                ],
+                category: 'chicken'
+            },
+            {
+                id: 18,
+                name: '黄焖鸡',
+                price: 42.00,
+                description: '经典鲁菜，鸡肉嫩滑，汤汁浓郁',
+                calories: 380,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/98c157ba056f4f1a8329d79c8b16d246~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524020&x-signature=FnhZNguNx%2Fn7n%2BAE7%2BipBtLvN%2BA%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/b472366ff2894706a2ced3fbb8899fd3.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=JpTAhCEpz10bnzq%2FpQqGgOBBWg4%3D'
+                ],
+                category: 'chicken'
+            },
+            {
+                id: 19,
+                name: '黄油鸡',
+                price: 45.00,
+                description: '印度风味，黄油香浓郁，口感丰富',
+                calories: 410,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a146304dbaf549b7baa858084196bb2f~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524018&x-signature=uykneNe%2BmWtfeufreaR%2B492%2F%2B8s%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/93ff83c88ccd466894e5efb796607a10.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=NIK8toDJ6JcVFdBzTarZ2jcterg%3D'
+                ],
+                category: 'chicken'
+            },
+            {
+                id: 20,
+                name: '辣子鸡丁',
+                price: 36.00,
+                description: '川菜经典，鸡肉外酥里嫩，麻辣鲜香',
+                calories: 390,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/3461430e9f6a46a9b751ab6691916ab7~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524018&x-signature=lENPNJ8lbQgX%2Fr0sG4Qkk%2Bwt0vI%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/ba20ad18a25444cf9c72c719125d8d68.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=0z%2B1RfUGdDPzaVQSbpltlSmK4sM%3D'
+                ],
+                category: 'chicken'
+            },
+            {
+                id: 21,
+                name: '酸汤鸡肉',
+                price: 39.00,
+                description: '酸爽开胃的酸汤，搭配嫩滑鸡肉',
+                calories: 340,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/930c726ccebc4ab5a6f5e14893bf3939~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524018&x-signature=KGWklFWH5n6lou57ji%2FAg3jUqW4%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/68c844fbcb4f473e817287d28f0e7dc4.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=t2K1ntfgbGWY3%2F9I7Dcz%2BuNYK18%3D'
+                ],
+                category: 'chicken'
+            },
+            {
+                id: 22,
+                name: '照烧鸡排',
+                price: 32.00,
+                description: '日式照烧风味，甜咸适中，肉质鲜嫩',
+                calories: 360,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/d4ee975f1be44049a7d35dbedb03ef0c~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319225317A66A66EC5C64ADE3D039&rrcfp=f06b921b&x-expires=1776524048&x-signature=ikxmJXaVAb4tQJiwWHyS8yAwoZ4%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/8cb574b47b3e436b9b72685b00b755e7.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192231413368FD64F29A69DE4A06&rrcfp=8a172a1a&x-expires=1774535501&x-signature=5hrf9T8K3B5h1LKED83PXeBfuhI%3D'
+                ],
+                category: 'chicken'
+            },
+            // 羊肉类菜品
+            {
+                id: 23,
+                name: '葱爆羊肉',
+                price: 42.00,
+                description: '鲜嫩的羊肉片与翠绿的葱段一起爆炒，香气四溢',
+                calories: 350,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/6f6da723dede45639100853c57c719ed~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192340223C7C88163C1FA5E31B29&rrcfp=f06b921b&x-expires=1776526840&x-signature=xRBJEx03QD%2FmbWYpdtenl316j4w%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/91e15c476d13448a821db4fe5f8de4dc.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192348587CF85BEEE6C461EFFC13&rrcfp=8a172a1a&x-expires=1774540139&x-signature=rTw39pLP3BHueS04jSwqlEPf1iE%3D'
+                ],
+                category: 'lamb'
+            },
+            {
+                id: 24,
+                name: '烤羊排',
+                price: 68.00,
+                description: '外焦里嫩的羊排，表面撒有香料，香气扑鼻',
+                calories: 420,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/388506ba2d0d4229affbe12c1eab68e3~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192340223C7C88163C1FA5E31B29&rrcfp=f06b921b&x-expires=1776526840&x-signature=3vubj1OCP78kL4y55m65wD%2F3rDs%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/dd57ecc798d44dcf88ba89a2145fd554.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192348587CF85BEEE6C461EFFC13&rrcfp=8a172a1a&x-expires=1774540139&x-signature=5FEqkLqioBfSICg00oT1%2FG1TYLo%3D'
+                ],
+                category: 'lamb'
+            },
+            {
+                id: 25,
+                name: '孜然羊肉',
+                price: 38.00,
+                description: '香辣可口的羊肉块，上面撒满了孜然粉和辣椒面',
+                calories: 380,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a8ee9fd5918a411ea08df0db2e21eb51~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192340223C7C88163C1FA5E31B29&rrcfp=f06b921b&x-expires=1776526840&x-signature=U%2BLXt4REFgO49274ONJITs8abmc%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/1ccecd96ba504f628c82d764f88df2ab.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=202603192348587CF85BEEE6C461EFFC13&rrcfp=8a172a1a&x-expires=1774540139&x-signature=cBx9gYWzJ3v6dMjW58YgNGQBxfM%3D'
+                ],
+                category: 'lamb'
+            },
+            // 鸭肉类菜品
+            {
+                id: 26,
+                name: '烤鸭',
+                price: 128.00,
+                description: '北京烤鸭，色泽红艳，肉质细嫩，肥而不腻，配以薄饼和配菜',
+                calories: 680,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/67223279038c4ec0a40e5b3587c75f59~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319235105BC80E5ED1A99B3D44C16&rrcfp=f06b921b&x-expires=1776527476&x-signature=haonE2B5CzR062zAJhe8qCEw9DQ%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/67223279038c4ec0a40e5b3587c75f59~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=20260319235105BC80E5ED1A99B3D44C16&rrcfp=f06b921b&x-expires=1776527476&x-signature=haonE2B5CzR062zAJhe8qCEw9DQ%3D'
+                ],
+                category: 'duck'
+            },
+            // 海鲜类菜品
+            {
+                id: 27,
+                name: '锅包大虾',
+                price: 58.00,
+                description: '外酥里嫩的大虾，裹着金黄色的外衣，上面撒着芝麻和葱花',
+                calories: 320,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/762c0952c63d4102bdb282bf13cdc15b~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=Y%2FbKZX4URy5EvGFC1GrTvkt1u88%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/762c0952c63d4102bdb282bf13cdc15b~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=Y%2FbKZX4URy5EvGFC1GrTvkt1u88%3D'
+                ],
+                category: 'seafood'
+            },
+            {
+                id: 28,
+                name: '辣炒鲍鱼',
+                price: 88.00,
+                description: '新鲜的鲍鱼切片，与辣椒和葱姜一起爆炒，色泽红亮',
+                calories: 280,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/9922c664055143b1b6abb8ccf4d0f748~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=6v%2FzL0BWkRF2qq%2FuKezHHTAX8FA%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/9922c664055143b1b6abb8ccf4d0f748~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=6v%2FzL0BWkRF2qq%2FuKezHHTAX8FA%3D'
+                ],
+                category: 'seafood'
+            },
+            {
+                id: 29,
+                name: '辣炒鱿鱼',
+                price: 42.00,
+                description: '鱿鱼片与辣椒、洋葱一起爆炒，香辣可口',
+                calories: 260,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/232e8cbc15d94c4baece3995c4fba80a~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=wJVgy8WXERcff4YEuXguV1rxI80%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/232e8cbc15d94c4baece3995c4fba80a~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=wJVgy8WXERcff4YEuXguV1rxI80%3D'
+                ],
+                category: 'seafood'
+            },
+            {
+                id: 30,
+                name: '麻辣烤鱼',
+                price: 68.00,
+                description: '烤鱼放在铁盘中，上面铺满辣椒和香料，香气四溢',
+                calories: 380,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/334dd74db07d480e8eb9c91a4ce0b1ae~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=MKiy82uFFplPu1ga%2BThdD0xuBWw%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/334dd74db07d480e8eb9c91a4ce0b1ae~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527674&x-signature=MKiy82uFFplPu1ga%2BThdD0xuBWw%3D'
+                ],
+                category: 'seafood'
+            },
+            {
+                id: 31,
+                name: '酸菜鱼',
+                price: 52.00,
+                description: '鲜嫩的鱼肉片，浸泡在酸辣的汤汁中，上面撒着花椒和葱花',
+                calories: 340,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a4ada53bee7647ae8bbb6f682765e8ba~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527676&x-signature=jE3sh0fsWsKMtVlPhpVqxznnk8w%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a4ada53bee7647ae8bbb6f682765e8ba~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527676&x-signature=jE3sh0fsWsKMtVlPhpVqxznnk8w%3D'
+                ],
+                category: 'seafood'
+            },
+            {
+                id: 32,
+                name: '太二酸菜鱼',
+                price: 58.00,
+                description: '特色酸菜鱼，鱼肉鲜嫩，酸菜爽口，汤汁浓郁',
+                calories: 360,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/b18a3d22770b4ffc93b1a0670758e3bf~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527675&x-signature=3s2skSi9FMOksQje9v2eZlqANhk%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/b18a3d22770b4ffc93b1a0670758e3bf~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527675&x-signature=3s2skSi9FMOksQje9v2eZlqANhk%3D'
+                ],
+                category: 'seafood'
+            },
+            {
+                id: 33,
+                name: '香煎三文鱼',
+                price: 68.00,
+                description: '煎至金黄的三文鱼片，表面撒着黑胡椒和柠檬片',
+                calories: 390,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e83fbe9e9bdf4806b8612c455627af86~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527719&x-signature=pKmKnvKFICCDJr39867rfrPyvCU%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/e83fbe9e9bdf4806b8612c455627af86~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603192354122473D8B03CD1B1E87494&rrcfp=f06b921b&x-expires=1776527719&x-signature=pKmKnvKFICCDJr39867rfrPyvCU%3D'
+                ],
+                category: 'seafood'
+            },
+            // 蔬菜类菜品
+            {
+                id: 34,
+                name: '清炒豆苗',
+                price: 22.00,
+                description: '清爽可口的豆苗，简单炒制，保留原汁原味',
+                calories: 120,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/b15ae9b64e6c4ac7a4101237774044d0~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528499&x-signature=HMHAGCyIB4jYE3uF7fYwUzrMHMo%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/b15ae9b64e6c4ac7a4101237774044d0~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528499&x-signature=HMHAGCyIB4jYE3uF7fYwUzrMHMo%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 35,
+                name: '番茄鸡蛋',
+                price: 25.00,
+                description: '经典家常菜，番茄酸甜可口，鸡蛋嫩滑',
+                calories: 180,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/816486124d864a38be555a05f3ff9ecb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528499&x-signature=3ytN%2B%2Bko4igaY9JNp3r4hAR4GGs%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/816486124d864a38be555a05f3ff9ecb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528499&x-signature=3ytN%2B%2Bko4igaY9JNp3r4hAR4GGs%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 36,
+                name: '干煸豆角',
+                price: 26.00,
+                description: '香辣可口的干煸豆角，口感爽脆',
+                calories: 220,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/f90f5da0fbf745e584f53b3f1bc9efbb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603200017182EA632C77A44E8ECC4B0&rrcfp=f06b921b&x-expires=1776529058&x-signature=4PO5pAvQkeQezou%2F1T4FP417lBo%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/f90f5da0fbf745e584f53b3f1bc9efbb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603200017182EA632C77A44E8ECC4B0&rrcfp=f06b921b&x-expires=1776529058&x-signature=4PO5pAvQkeQezou%2F1T4FP417lBo%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 37,
+                name: '韭菜鸡蛋',
+                price: 24.00,
+                description: '传统家常菜，韭菜鲜香，鸡蛋嫩滑',
+                calories: 190,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/fe75831827d3421880d378fe7d4c6b99~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528499&x-signature=0GMwOplYp1ptYdlOi72Q0WytPBc%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/fe75831827d3421880d378fe7d4c6b99~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528499&x-signature=0GMwOplYp1ptYdlOi72Q0WytPBc%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 38,
+                name: '溜豆腐',
+                price: 22.00,
+                description: '嫩滑的豆腐，配以鲜香的汤汁',
+                calories: 150,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/21ba9524cde54687ad1788b3653b4413~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=KT%2FqaYHOHrWNyFDw2Co8BwaO4qc%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/21ba9524cde54687ad1788b3653b4413~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=KT%2FqaYHOHrWNyFDw2Co8BwaO4qc%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 39,
+                name: '清炒菜花',
+                price: 20.00,
+                description: '清爽可口的菜花，简单炒制',
+                calories: 110,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/2430a3a687dd4fffaca0729e9ce27689~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=rN1y2cYPOGf4ectFMF0NGyxlWmo%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/2430a3a687dd4fffaca0729e9ce27689~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=rN1y2cYPOGf4ectFMF0NGyxlWmo%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 40,
+                name: '手撕包菜',
+                price: 23.00,
+                description: '香辣可口的手撕包菜，口感爽脆',
+                calories: 160,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/99e3c95b58dd4a64b463a24a26fc2c4f~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=cUm4oayU2QZ48mDFZ38XgMnFU70%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/99e3c95b58dd4a64b463a24a26fc2c4f~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=cUm4oayU2QZ48mDFZ38XgMnFU70%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 41,
+                name: '酸辣土豆丝',
+                price: 22.00,
+                description: '经典家常菜，酸辣可口，土豆丝爽脆',
+                calories: 170,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c2dbaceb94df4137be8a1993f4fbadfe~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=UOBs7BHeiPS0oWns5uVdFby8Xjg%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c2dbaceb94df4137be8a1993f4fbadfe~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528518&x-signature=UOBs7BHeiPS0oWns5uVdFby8Xjg%3D'
+                ],
+                category: 'vegetable'
+            },
+            {
+                id: 42,
+                name: '小葱皮蛋拌豆腐',
+                price: 25.00,
+                description: '清爽可口的凉菜，豆腐嫩滑，皮蛋鲜香',
+                calories: 140,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a326de20adf24c21bed8035787b88cd4~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528554&x-signature=FL7EVx4y7DCfcPnWp28xpd7pyX8%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/a326de20adf24c21bed8035787b88cd4~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528554&x-signature=FL7EVx4y7DCfcPnWp28xpd7pyX8%3D'
+                ],
+                category: 'vegetable'
+            },
+            // 饭面汤粉类菜品
+            {
+                id: 43,
+                name: '肥肠粉',
+                price: 38.00,
+                description: '传统四川小吃，肥肠鲜香，粉条爽滑',
+                calories: 320,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/2189ebe8a8274828b3408fc23327e222~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=BL9otFBkmdW1JQm%2B7KeHfFkgKRs%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/2189ebe8a8274828b3408fc23327e222~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=BL9otFBkmdW1JQm%2B7KeHfFkgKRs%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 44,
+                name: '干炒牛河',
+                price: 35.00,
+                description: '经典粤菜，河粉爽滑，牛肉嫩滑',
+                calories: 350,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/65eac29a834745289bab12a57dab7b1a~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=Pp3lZfJFmpaZNWfa1%2BMoitz3tNg%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/65eac29a834745289bab12a57dab7b1a~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=Pp3lZfJFmpaZNWfa1%2BMoitz3tNg%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 45,
+                name: '疙瘩汤',
+                price: 28.00,
+                description: '北方传统面食，面疙瘩软糯，汤汁鲜香',
+                calories: 280,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/643455ffd2f547cc9cbf79fe32b5a74d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=JLFe0P5t00P%2Fob8h4e3v9RgH5m8%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/643455ffd2f547cc9cbf79fe32b5a74d~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=JLFe0P5t00P%2Fob8h4e3v9RgH5m8%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 46,
+                name: '咖喱牛腩饭',
+                price: 45.00,
+                description: '经典东南亚美食，咖喱浓郁，牛腩软烂',
+                calories: 420,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/26e4722d84e04e1cb621d013bae526ce~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=8m6Q59KhTr2OMdD4Dp0XyzcPSSY%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/26e4722d84e04e1cb621d013bae526ce~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=2026032000075939CB113C094F59E31244&rrcfp=f06b921b&x-expires=1776528568&x-signature=8m6Q59KhTr2OMdD4Dp0XyzcPSSY%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 47,
+                name: '卤肉饭',
+                price: 32.00,
+                description: '台湾经典美食，卤肉香烂，米饭软糯',
+                calories: 380,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c4ea97582abe4b2eb60330d93743f242~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603200017182EA632C77A44E8ECC4B0&rrcfp=f06b921b&x-expires=1776529062&x-signature=DvIKoeDoHXS0v1jIWIrflYLrD%2BE%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/c4ea97582abe4b2eb60330d93743f242~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603200017182EA632C77A44E8ECC4B0&rrcfp=f06b921b&x-expires=1776529062&x-signature=DvIKoeDoHXS0v1jIWIrflYLrD%2BE%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 48,
+                name: '麻辣烫',
+                price: 36.00,
+                description: '四川特色小吃，麻辣鲜香，食材丰富',
+                calories: 340,
+                image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/0159cc91bfae4ecdb5d9fd62d582a18f.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260320002200A9855FBD20F04BE4FB90&rrcfp=8a172a1a&x-expires=1774542120&x-signature=nrakhycO%2FddflFtrCyLkLMzyto8%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/0159cc91bfae4ecdb5d9fd62d582a18f.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260320002200A9855FBD20F04BE4FB90&rrcfp=8a172a1a&x-expires=1774542120&x-signature=nrakhycO%2FddflFtrCyLkLMzyto8%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 49,
+                name: '酸缸豆炒饭',
+                price: 28.00,
+                description: '传统家常菜，酸缸豆开胃，炒饭香糯',
+                calories: 310,
+                image: 'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/21fc3ec6d4384525adf2a8dd57606509.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260320002200A9855FBD20F04BE4FB90&rrcfp=8a172a1a&x-expires=1774542120&x-signature=zsIvgOInxVs98YtTLqkY8qs2k2s%3D',
+                detailImages: [
+                    'https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/21fc3ec6d4384525adf2a8dd57606509.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260320002200A9855FBD20F04BE4FB90&rrcfp=8a172a1a&x-expires=1774542120&x-signature=zsIvgOInxVs98YtTLqkY8qs2k2s%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 50,
+                name: '酸汤肥牛粉',
+                price: 42.00,
+                description: '贵州特色小吃，酸汤开胃，肥牛鲜嫩',
+                calories: 360,
+                image: 'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/88359c714c374929b52756842f19dbba.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260320002200A9855FBD20F04BE4FB90&rrcfp=8a172a1a&x-expires=1774542120&x-signature=IQEELeUXqrki4x43P6kNlJCKp5g%3D',
+                detailImages: [
+                    'https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/88359c714c374929b52756842f19dbba.jpeg~tplv-a9rns2rl98-24:720:720.jpeg?lk3s=8e244e95&rcl=20260320002200A9855FBD20F04BE4FB90&rrcfp=8a172a1a&x-expires=1774542120&x-signature=IQEELeUXqrki4x43P6kNlJCKp5g%3D'
+                ],
+                category: 'rice_noodle'
+            },
+            {
+                id: 51,
+                name: '西红柿鸡蛋面',
+                price: 28.00,
+                description: '传统面食，番茄汤汁酸甜，鸡蛋嫩滑',
+                calories: 300,
+                image: 'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/72241efd52644f04a33326fe570a18eb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603200017182EA632C77A44E8ECC4B0&rrcfp=f06b921b&x-expires=1776529059&x-signature=WVvT8CSqCopZLHK3mInaDTu8NyE%3D',
+                detailImages: [
+                    'https://p5-flow-imagex-sign.byteimg.com/tos-cn-i-a9rns2rl98/rc/pc/super_tool/72241efd52644f04a33326fe570a18eb~tplv-a9rns2rl98-image.image?lk3s=8e244e95&rcl=202603200017182EA632C77A44E8ECC4B0&rrcfp=f06b921b&x-expires=1776529059&x-signature=WVvT8CSqCopZLHK3mInaDTu8NyE%3D'
+                ],
+                category: 'rice_noodle'
+            }
+        ];
+
+        // 购物车数据
+        let cart = [];
+
+        // DOM元素
+        const headerImage = document.getElementById('headerImage');
+        const menuItemsContainer = document.getElementById('menuItems');
+        const categoryTitle = document.getElementById('categoryTitle');
+        const categoryItems = document.querySelectorAll('.category-item');
+        const cartButton = document.getElementById('cartButton');
+        const cartButtonContainer = document.getElementById('cartButtonContainer');
+        const cartCount = document.getElementById('cartCount');
+        const cartSidebar = document.getElementById('cartSidebar');
+        const closeCart = document.getElementById('closeCart');
+        const overlay = document.getElementById('overlay');
+        const cartItemsContainer = document.getElementById('cartItems');
+        const emptyCart = document.getElementById('emptyCart');
+        const totalPrice = document.getElementById('totalPrice');
+        const checkoutButton = document.getElementById('checkoutButton');
+        const menuItemsContainerScroll = document.getElementById('menuItemsContainer');
+
+        // 初始化页面
+        function init() {
+            renderMenuItems('all');
+            setupEventListeners();
+        }
+
+        // 渲染菜品列表
+        function renderMenuItems(category) {
+            menuItemsContainer.innerHTML = '';
+            
+            // 更新类别标题
+            const categoryNames = {
+                'all': '全部菜品',
+                'beef': '牛肉类',
+                'chicken': '鸡肉类',
+                'pork': '猪肉类',
+                'lamb': '羊肉类',
+                'duck': '鸭肉类'
+            };
+            categoryTitle.textContent = categoryNames[category] || '全部菜品';
+            
+            const filteredItems = category === 'all' 
+                ? menuItems 
+                : menuItems.filter(item => item.category === category);
+            
+            filteredItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'menu-item';
+                itemElement.innerHTML = `
+                    <div class="relative">
+                        <img src="${item.image}" alt="${item.name}" class="menu-item-image">
+                    </div>
+                    <div class="p-3 relative">
+                        <h3 class="font-bold text-textDark text-lg">${item.name}</h3>
+                        <p class="text-sm text-textLight my-1">${item.calories} 卡路里</p>
+                        <p class="text-primary font-bold text-lg">¥${item.price.toFixed(2)}</p>
+                        <button class="add-to-cart bg-secondary text-white rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-90 transition-all absolute bottom-3 right-3" data-id="${item.id}">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                `;
+                menuItemsContainer.appendChild(itemElement);
+            });
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 滚动事件 - 折叠顶部图片
+            menuItemsContainerScroll.addEventListener('scroll', () => {
+                const scrollTop = menuItemsContainerScroll.scrollTop;
+                const maxScroll = 200; // 最大滚动距离
+                
+                // 计算透明度和高度
+                const opacity = Math.max(0, 1 - scrollTop / maxScroll);
+                const scale = Math.max(0.8, 1 - scrollTop / (maxScroll * 2));
+                const height = Math.max(0, 192 - (scrollTop * 0.96)); // 192px * 0.96 = 184px，完全消失
+                
+                headerImage.style.height = `${height}px`;
+                headerImage.style.opacity = opacity;
+                headerImage.style.transform = `scale(${scale})`;
+                headerImage.style.transformOrigin = 'top center';
+            });
+            
+            // 类别切换
+            categoryItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    categoryItems.forEach(cat => cat.classList.remove('category-active'));
+                    item.classList.add('category-active');
+                    const category = item.dataset.category;
+                    renderMenuItems(category);
+                });
+            });
+
+            // 菜品点击事件 - 打开详情模态框
+            menuItemsContainer.addEventListener('click', (e) => {
+                const menuItem = e.target.closest('.menu-item');
+                if (menuItem && !e.target.closest('.add-to-cart')) {
+                    const itemId = parseInt(menuItem.querySelector('.add-to-cart').dataset.id);
+                    openItemDetail(itemId);
+                }
+            });
+
+            // 添加到购物车 - 带吸入动画效果（保留原菜品）
+            menuItemsContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.add-to-cart')) {
+                    const button = e.target.closest('.add-to-cart');
+                    const id = parseInt(button.dataset.id);
+                    const itemElement = button.closest('.menu-item');
+                    
+                    // 创建菜品克隆用于动画
+                    const itemClone = itemElement.cloneNode(true);
+                    itemClone.style.position = 'absolute';
+                    itemClone.style.zIndex = '1000';
+                    itemClone.style.pointerEvents = 'none';
+                    itemClone.style.width = `${itemElement.offsetWidth}px`;
+                    itemClone.style.height = `${itemElement.offsetHeight}px`;
+                    itemClone.style.transformOrigin = 'center center';
+                    
+                    // 获取原始位置
+                    const rect = itemElement.getBoundingClientRect();
+                    itemClone.style.left = `${rect.left}px`;
+                    itemClone.style.top = `${rect.top}px`;
+                    
+                    // 添加到页面
+                    document.body.appendChild(itemClone);
+                    
+                    // 获取购物车位置
+                    const cartRect = cartButtonContainer.getBoundingClientRect();
+                    const cartCenterX = cartRect.left + cartRect.width / 2;
+                    const cartCenterY = cartRect.top + cartRect.height / 2;
+                    
+                    // 计算目标位置和缩放
+                    const targetX = cartCenterX - rect.left - rect.width / 2;
+                    const targetY = cartCenterY - rect.top - rect.height / 2;
+                    
+                    // 创建动画关键帧
+                    const animateSuckIntoCart = () => {
+                        // 第一阶段：准备阶段 - 轻微放大
+                        itemClone.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)';
+                        itemClone.style.transform = 'scale(1.05)';
+                        
+                        setTimeout(() => {
+                            // 第二阶段：吸入阶段 - 快速移动并缩小
+                            itemClone.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                            itemClone.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.1)`;
+                            itemClone.style.opacity = '0.7';
+                            itemClone.style.filter = 'blur(2px)';
+                            
+                            // 创建购物车吸引力效果
+                            cartButtonContainer.style.animation = 'pulse 0.6s ease-in-out';
+                            
+                            setTimeout(() => {
+                                // 第三阶段：消失阶段
+                                itemClone.style.transition = 'all 0.2s ease-out';
+                                itemClone.style.opacity = '0';
+                                
+                                setTimeout(() => {
+                                    // 移除克隆元素
+                                    document.body.removeChild(itemClone);
+                                    
+                                    // 清除购物车动画
+                                    cartButtonContainer.style.animation = '';
+                                    
+                                    // 添加到购物车
+                                    addToCart(id);
+                                    
+                                    // 购物车弹跳效果
+                                    cartButtonContainer.classList.add('cart-bounce');
+                                    setTimeout(() => cartButtonContainer.classList.remove('cart-bounce'), 500);
+                                    
+                                    // 不自动显示购物车
+                                    // cartSidebar.classList.remove('translate-x-full');
+                                    // overlay.classList.remove('hidden');
+                                    
+                                    // 为新添加的购物车项目添加进入动画
+                                    setTimeout(() => {
+                                        const cartItems = cartItemsContainer.querySelectorAll('.flex.items-center.justify-between.py-3.border-b');
+                                        if (cartItems.length > 0) {
+                                            const lastItem = cartItems[cartItems.length - 1];
+                                            lastItem.classList.add('cart-item-enter');
+                                        }
+                                    }, 100);
+                                }, 200);
+                            }, 600);
+                        }, 200);
+                    };
+                    
+                    // 开始动画
+                    animateSuckIntoCart();
+                }
+            });
+
+            // 购物车按钮点击 - 防止拖拽时误触发
+            let clickTimer;
+            let isClick = true;
+            
+            cartButton.addEventListener('mousedown', () => {
+                isClick = true;
+                clickTimer = setTimeout(() => {
+                    isClick = false;
+                }, 100); // 100ms内视为点击，超过视为拖拽
+            });
+            
+            cartButton.addEventListener('mouseup', () => {
+                clearTimeout(clickTimer);
+            });
+            
+            cartButton.addEventListener('click', (e) => {
+                if (isClick && !isDragging) {
+                    cartSidebar.classList.remove('translate-x-full');
+                    overlay.classList.remove('hidden');
+                }
+            });
+            
+            // 触摸设备支持
+            cartButton.addEventListener('touchstart', () => {
+                isClick = true;
+                clickTimer = setTimeout(() => {
+                    isClick = false;
+                }, 100);
+            });
+            
+            cartButton.addEventListener('touchend', () => {
+                clearTimeout(clickTimer);
+                if (isClick && !isDragging) {
+                    cartSidebar.classList.remove('translate-x-full');
+                    overlay.classList.remove('hidden');
+                }
+            });
+            
+            // 购物车按钮拖动功能 - 带平滑动画
+            let isDragging = false;
+            let offsetX, offsetY;
+            let lastX, lastY;
+            let velocityX = 0, velocityY = 0;
+            let animationFrameId;
+            
+            // 平滑移动函数
+            function smoothMove() {
+                if (!isDragging) {
+                    // 添加惯性效果
+                    velocityX *= 0.95;
+                    velocityY *= 0.95;
+                    
+                    if (Math.abs(velocityX) < 0.5 && Math.abs(velocityY) < 0.5) {
+                        velocityX = 0;
+                        velocityY = 0;
+                        cancelAnimationFrame(animationFrameId);
+                        return;
+                    }
+                    
+                    let x = parseFloat(cartButtonContainer.style.left) + velocityX;
+                    let y = parseFloat(cartButtonContainer.style.top) + velocityY;
+                    
+                    // 限制在视口内
+                    const maxX = window.innerWidth - cartButtonContainer.offsetWidth;
+                    const maxY = window.innerHeight - cartButtonContainer.offsetHeight;
+                    
+                    const boundedX = Math.max(0, Math.min(x, maxX));
+                    const boundedY = Math.max(0, Math.min(y, maxY));
+                    
+                    // 如果碰到边界，反弹效果
+                    if (boundedX !== x) velocityX *= -0.5;
+                    if (boundedY !== y) velocityY *= -0.5;
+                    
+                    cartButtonContainer.style.left = `${boundedX}px`;
+                    cartButtonContainer.style.top = `${boundedY}px`;
+                    
+                    animationFrameId = requestAnimationFrame(smoothMove);
+                }
+            }
+            
+            cartButtonContainer.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                const rect = cartButtonContainer.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                cartButtonContainer.style.transition = 'none'; // 拖动时禁用过渡
+                cartButtonContainer.style.cursor = 'grabbing';
+                cancelAnimationFrame(animationFrameId);
+                velocityX = 0;
+                velocityY = 0;
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const currentX = e.clientX;
+                const currentY = e.clientY;
+                
+                // 计算速度
+                velocityX = currentX - lastX;
+                velocityY = currentY - lastY;
+                lastX = currentX;
+                lastY = currentY;
+                
+                const x = currentX - offsetX;
+                const y = currentY - offsetY;
+                
+                // 限制在视口内
+                const maxX = window.innerWidth - cartButtonContainer.offsetWidth;
+                const maxY = window.innerHeight - cartButtonContainer.offsetHeight;
+                
+                const boundedX = Math.max(0, Math.min(x, maxX));
+                const boundedY = Math.max(0, Math.min(y, maxY));
+                
+                cartButtonContainer.style.left = `${boundedX}px`;
+                cartButtonContainer.style.top = `${boundedY}px`;
+                cartButtonContainer.style.right = 'auto';
+                cartButtonContainer.style.bottom = 'auto';
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    cartButtonContainer.style.transition = 'transform 0.1s ease-out';
+                    cartButtonContainer.style.cursor = 'grab';
+                    // 开始惯性动画
+                    smoothMove();
+                }
+            });
+            
+            // 触摸设备支持
+            cartButtonContainer.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                const touch = e.touches[0];
+                const rect = cartButtonContainer.getBoundingClientRect();
+                offsetX = touch.clientX - rect.left;
+                offsetY = touch.clientY - rect.top;
+                lastX = touch.clientX;
+                lastY = touch.clientY;
+                cartButtonContainer.style.transition = 'none';
+                e.preventDefault();
+                cancelAnimationFrame(animationFrameId);
+                velocityX = 0;
+                velocityY = 0;
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                
+                const touch = e.touches[0];
+                const currentX = touch.clientX;
+                const currentY = touch.clientY;
+                
+                // 计算速度
+                velocityX = currentX - lastX;
+                velocityY = currentY - lastY;
+                lastX = currentX;
+                lastY = currentY;
+                
+                const x = currentX - offsetX;
+                const y = currentY - offsetY;
+                
+                // 限制在视口内
+                const maxX = window.innerWidth - cartButtonContainer.offsetWidth;
+                const maxY = window.innerHeight - cartButtonContainer.offsetHeight;
+                
+                const boundedX = Math.max(0, Math.min(x, maxX));
+                const boundedY = Math.max(0, Math.min(y, maxY));
+                
+                cartButtonContainer.style.left = `${boundedX}px`;
+                cartButtonContainer.style.top = `${boundedY}px`;
+                cartButtonContainer.style.right = 'auto';
+                cartButtonContainer.style.bottom = 'auto';
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('touchend', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    cartButtonContainer.style.transition = 'transform 0.1s ease-out';
+                    // 开始惯性动画
+                    smoothMove();
+                }
+            });
+
+            // 关闭购物车
+            closeCart.addEventListener('click', closeCartSidebar);
+            overlay.addEventListener('click', closeCartSidebar);
+
+            // 结算按钮
+            checkoutButton.addEventListener('click', () => {
+                if (cart.length > 0) {
+                    alert('感谢您的购买！订单已提交。');
+                    clearCart();
+                }
+            });
+
+            // 菜品详情模态框事件
+            closeDetailModal.addEventListener('click', closeItemDetail);
+            
+            // 图片轮播功能
+            let currentSlide = 0;
+            let startX, moveX;
+            const imageSlider = document.getElementById('imageSlider');
+            const sliderIndicators = document.getElementById('sliderIndicators');
+
+            // 触摸开始
+            imageSlider.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                imageSlider.style.transition = 'none';
+            });
+
+            // 触摸移动
+            imageSlider.addEventListener('touchmove', (e) => {
+                moveX = e.touches[0].clientX;
+                const diff = moveX - startX;
+                const translateX = -currentSlide * 100 + (diff / window.innerWidth) * 100;
+                imageSlider.style.transform = `translateX(${translateX}%)`;
+            });
+
+            // 触摸结束
+            imageSlider.addEventListener('touchend', (e) => {
+                const diff = moveX - startX;
+                if (Math.abs(diff) > 50) {
+                    if (diff > 0 && currentSlide > 0) {
+                        currentSlide--;
+                    } else if (diff < 0 && currentSlide < sliderIndicators.children.length - 1) {
+                        currentSlide++;
+                    }
+                }
+                updateSlider();
+            });
+        }
+
+        // 打开菜品详情
+        function openItemDetail(id) {
+            const item = menuItems.find(item => item.id === id);
+            if (!item) return;
+
+            // 填充详情数据
+            document.getElementById('detailItemName').textContent = item.name;
+            document.getElementById('detailItemPrice').textContent = `¥${item.price.toFixed(2)}`;
+            document.getElementById('detailItemDescription').textContent = item.description;
+            document.getElementById('detailItemCalories').textContent = `${item.calories} 卡路里`;
+            document.getElementById('detailItemCategory').textContent = getCategoryName(item.category);
+
+            // 设置详情页加入购物车按钮
+            const detailAddToCart = document.getElementById('detailAddToCart');
+            detailAddToCart.onclick = () => {
+                // 创建一个临时元素用于动画
+                const tempElement = document.createElement('div');
+                tempElement.className = 'w-16 h-16 bg-secondary rounded-full flex items-center justify-center text-white';
+                tempElement.innerHTML = `<i class="fa fa-cutlery"></i>`;
+                tempElement.style.position = 'absolute';
+                tempElement.style.zIndex = '1000';
+                tempElement.style.pointerEvents = 'none';
+                
+                // 获取按钮位置
+                const buttonRect = detailAddToCart.getBoundingClientRect();
+                tempElement.style.left = `${buttonRect.left + buttonRect.width / 2 - 32}px`;
+                tempElement.style.top = `${buttonRect.top + buttonRect.height / 2 - 32}px`;
+                
+                // 添加到页面
+                document.body.appendChild(tempElement);
+                
+                // 获取购物车位置
+                const cartRect = cartButtonContainer.getBoundingClientRect();
+                const cartCenterX = cartRect.left + cartRect.width / 2;
+                const cartCenterY = cartRect.top + cartRect.height / 2;
+                
+                // 计算目标位置
+                const targetX = cartCenterX - buttonRect.left - buttonRect.width / 2;
+                const targetY = cartCenterY - buttonRect.top - buttonRect.height / 2;
+                
+                // 创建动画
+                tempElement.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                tempElement.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.1)`;
+                tempElement.style.opacity = '0.7';
+                
+                // 购物车吸引力效果
+                cartButtonContainer.style.animation = 'pulse 0.6s ease-in-out';
+                
+                // 动画结束后添加到购物车并清理
+                setTimeout(() => {
+                    document.body.removeChild(tempElement);
+                    cartButtonContainer.style.animation = '';
+                    addToCart(item.id);
+                    
+                    // 购物车弹跳效果
+                    cartButtonContainer.classList.add('cart-bounce');
+                    setTimeout(() => cartButtonContainer.classList.remove('cart-bounce'), 500);
+                }, 600);
+            };
+
+            // 加载图片轮播
+            const imageSlider = document.getElementById('imageSlider');
+            const sliderIndicators = document.getElementById('sliderIndicators');
+            imageSlider.innerHTML = '';
+            sliderIndicators.innerHTML = '';
+
+            // 优先使用detailImages，如果没有则使用item.image
+            const images = item.detailImages && item.detailImages.length > 0 ? item.detailImages : [item.image];
+            images.forEach((imgSrc, index) => {
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'w-full h-full flex-shrink-0';
+                imgDiv.innerHTML = `<img src="${imgSrc}" alt="${item.name}" class="w-full h-full object-contain">`;
+                imageSlider.appendChild(imgDiv);
+
+                const indicator = document.createElement('div');
+                indicator.className = `w-2 h-2 rounded-full ${index === 0 ? 'bg-primary' : 'bg-gray-300'}`;
+                indicator.onclick = () => {
+                    currentSlide = index;
+                    updateSlider();
+                };
+                sliderIndicators.appendChild(indicator);
+            });
+
+            // 显示模态框
+            document.getElementById('itemDetailModal').classList.remove('translate-x-full');
+            overlay.classList.remove('hidden');
+        }
+
+        // 关闭菜品详情
+        function closeItemDetail() {
+            document.getElementById('itemDetailModal').classList.add('translate-x-full');
+            overlay.classList.add('hidden');
+        }
+
+        // 更新轮播图
+        function updateSlider() {
+            const imageSlider = document.getElementById('imageSlider');
+            const sliderIndicators = document.getElementById('sliderIndicators');
+            imageSlider.style.transition = 'transform 0.3s ease';
+            imageSlider.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+            // 更新指示器
+            for (let i = 0; i < sliderIndicators.children.length; i++) {
+                sliderIndicators.children[i].className = `w-2 h-2 rounded-full ${i === currentSlide ? 'bg-primary' : 'bg-gray-300'}`;
+            }
+        }
+
+        // 获取分类名称
+        function getCategoryName(category) {
+            const categoryMap = {
+                'all': '全部菜品',
+                'pork': '🐖猪肉'
+            };
+            return categoryMap[category] || category;
+        }
+
+        // 添加到购物车
+        function addToCart(id) {
+            const item = menuItems.find(item => item.id === id);
+            if (!item) return;
+
+            const cartItem = cart.find(cartItem => cartItem.id === id);
+            if (cartItem) {
+                cartItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...item,
+                    quantity: 1
+                });
+            }
+
+            updateCart();
+        }
+
+        // 更新购物车
+        function updateCart() {
+            // 更新购物车数量
+            cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
+
+            // 更新购物车侧边栏
+            renderCartItems();
+            
+            // 更新总价
+            const total = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+            totalPrice.textContent = `¥${total.toFixed(2)}`;
+        }
+
+        // 渲染购物车项目
+        function renderCartItems() {
+            if (cart.length === 0) {
+                emptyCart.classList.remove('hidden');
+                cartItemsContainer.innerHTML = '';
+                cartItemsContainer.appendChild(emptyCart);
+                return;
+            }
+
+            emptyCart.classList.add('hidden');
+            cartItemsContainer.innerHTML = '';
+
+            cart.forEach(item => {
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'flex items-center justify-between py-3 border-b';
+                cartItemElement.innerHTML = `
+                    <div class="flex items-center">
+                        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded object-cover">
+                        <div class="ml-3">
+                            <h4 class="font-bold">${item.name}</h4>
+                            <p class="text-sm text-textLight">¥${item.price.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <button class="quantity-btn decrease-quantity bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center" data-id="${item.id}">
+                            <i class="fa fa-minus"></i>
+                        </button>
+                        <span class="mx-2">${item.quantity}</span>
+                        <button class="quantity-btn increase-quantity bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center" data-id="${item.id}">
+                            <i class="fa fa-plus"></i>
+                        </button>
+                        <button class="remove-item ml-2 text-red-500" data-id="${item.id}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(cartItemElement);
+            });
+
+            // 添加购物车项目的事件监听器
+            document.querySelectorAll('.decrease-quantity').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = parseInt(button.dataset.id);
+                    decreaseQuantity(id);
+                });
+            });
+
+            document.querySelectorAll('.increase-quantity').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = parseInt(button.dataset.id);
+                    increaseQuantity(id);
+                });
+            });
+
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', () => {
+                    const id = parseInt(button.dataset.id);
+                    removeFromCart(id);
+                });
+            });
+        }
+
+        // 减少数量
+        function decreaseQuantity(id) {
+            const cartItem = cart.find(item => item.id === id);
+            if (cartItem) {
+                if (cartItem.quantity > 1) {
+                    cartItem.quantity -= 1;
+                } else {
+                    removeFromCart(id);
+                }
+                updateCart();
+            }
+        }
+
+        // 增加数量
+        function increaseQuantity(id) {
+            const cartItem = cart.find(item => item.id === id);
+            if (cartItem) {
+                cartItem.quantity += 1;
+                updateCart();
+            }
+        }
+
+        // 从购物车移除
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCart();
+        }
+
+        // 清空购物车
+        function clearCart() {
+            cart = [];
+            updateCart();
+            closeCartSidebar();
+        }
+
+        // 关闭购物车侧边栏
+        function closeCartSidebar() {
+            cartSidebar.classList.add('translate-x-full');
+            overlay.classList.add('hidden');
+        }
+
+
+
+
+
+        // 添加到购物车
+        function addToCart(id) {
+            const item = menuItems.find(item => item.id === id);
+            if (!item) return;
+
+            const existingItem = cart.find(cartItem => cartItem.id === id);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({
+                    ...item,
+                    quantity: 1
+                });
+            }
+
+            updateCart();
+        }
+
+        // 更新购物车
+        function updateCart() {
+            // 更新购物车数量
+            cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
+            
+            // 更新购物车项目
+            if (cart.length === 0) {
+                emptyCart.classList.remove('hidden');
+                cartItemsContainer.innerHTML = '';
+                cartItemsContainer.appendChild(emptyCart);
+            } else {
+                emptyCart.classList.add('hidden');
+                cartItemsContainer.innerHTML = '';
+                
+                cart.forEach(item => {
+                    const cartItemElement = document.createElement('div');
+                    cartItemElement.className = 'flex items-center justify-between py-3 border-b';
+                    cartItemElement.innerHTML = `
+                        <div class="flex items-center">
+                            <img src="${item.image}" alt="${item.name}" class="w-12 h-12 rounded object-cover">
+                            <div class="ml-3">
+                                <h4 class="font-bold">${item.name}</h4>
+                                <p class="text-sm text-gray-500">¥${item.price.toFixed(2)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="flex items-center">
+                                <button class="quantity-btn decrease-quantity bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center" data-id="${item.id}">
+                                    <i class="fa fa-minus"></i>
+                                </button>
+                                <span class="mx-2">${item.quantity}</span>
+                                <button class="quantity-btn increase-quantity bg-gray-200 text-gray-700 rounded-full w-6 h-6 flex items-center justify-center" data-id="${item.id}">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                            </div>
+                            <button class="remove-item ml-2 text-red-500" data-id="${item.id}">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(cartItemElement);
+                });
+
+                // 添加购物车项目的事件监听器
+                document.querySelectorAll('.decrease-quantity').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const id = parseInt(button.dataset.id);
+                        decreaseQuantity(id);
+                    });
+                });
+
+                document.querySelectorAll('.increase-quantity').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const id = parseInt(button.dataset.id);
+                        increaseQuantity(id);
+                    });
+                });
+
+                document.querySelectorAll('.remove-item').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const id = parseInt(button.dataset.id);
+                        removeFromCart(id);
+                    });
+                });
+            }
+
+            // 更新总价
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            totalPrice.textContent = `¥${total.toFixed(2)}`;
+        }
+
+        // 初始化应用
+        init();
+    </script>
+
+</body></html>
